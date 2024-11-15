@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego del Ahorcado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFF0F5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #D53F8C;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        #ahorcado {
+            display: block;
+            margin: 0 auto;
+        }
+        #palabra {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 1rem 0;
+            min-height: 3rem;
+        }
+        #teclado {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .tecla {
+            background-color: #FBB6CE;
+            border: none;
+            border-radius: 4px;
+            color: #702459;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            transition: background-color 0.3s;
+        }
+        .tecla:hover:not(:disabled) {
+            background-color: #F687B3;
+        }
+        .tecla:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #intentos, #mensaje {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        #nuevoJuego {
+            display: block;
+            width: 100%;
+            background-color: #D53F8C;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #nuevoJuego:hover {
+            background-color: #B83280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Juego del Ahorcado</h1>
+        <svg id="ahorcado" width="200" height="250">
+            <!-- Base -->
+            <line x1="20" y1="230" x2="180" y2="230" stroke="pink" stroke-width="4"/>
+            <line x1="40" y1="230" x2="40" y2="30" stroke="pink" stroke-width="4"/>
+            <line x1="40" y1="30" x2="100" y2="30" stroke="pink" stroke-width="4"/>
+            <line x1="100" y1="30" x2="100" y2="50" stroke="pink" stroke-width="4"/>
+            <!-- Partes del cuerpo (inicialmente ocultas) -->
+            <circle id="cabeza" cx="100" cy="70" r="20" stroke="pink" stroke-width="4" fill="none" style="display: none;"/>
+            <line id="cuerpo" x1="100" y1="90" x2="100" y2="150" stroke="pink" stroke-width="4" style="display: none;"/>
+            <line id="brazoIzq" x1="100" y1="120" x2="60" y2="100" stroke="pink" stroke-width="4" style="display: none;"/>
+            <line id="brazoDer" x1="100" y1="120" x2="140" y2="100" stroke="pink" stroke-width="4" style="display: none;"/>
+            <line id="piernaIzq" x1="100" y1="150" x2="60" y2="180" stroke="pink" stroke-width="4" style="display: none;"/>
+            <line id="piernaDer" x1="100" y1="150" x2="140" y2="180" stroke="pink" stroke-width="4" style="display: none;"/>
+        </svg>
+        <div id="palabra"></div>
+        <div id="teclado"></div>
+        <div id="intentos"></div>
+        <div id="mensaje"></div>
+        <button id="nuevoJuego">Nuevo Juego</button>
+    </div>
+
+    <script>
+        const palabras = ['REACT', 'JAVASCRIPT', 'TYPESCRIPT', 'NEXTJS', 'VERCEL'];
+        let palabraActual = '';
+        let letrasAdivinadas = [];
+        let intentosRestantes = 6;
+        let juegoTerminado = false;
+
+        const elementoPalabra = document.getElementById('palabra');
+        const elementoTeclado = document.getElementById('teclado');
+        const elementoIntentos = document.getElementById('intentos');
+        const elementoMensaje = document.getElementById('mensaje');
+        const botonNuevoJuego = document.getElementById('nuevoJuego');
+
+        function iniciarJuego() {
+            palabraActual = palabras[Math.floor(Math.random() * palabras.length)];
+            letrasAdivinadas = [];
+            intentosRestantes = 6;
+            juegoTerminado = false;
+
+            actualizarPalabra();
+            actualizarIntentos();
+            actualizarMensaje('');
+            actualizarAhorcado();
+            crearTeclado();
+        }
+
+        function actualizarPalabra() {
+            elementoPalabra.textContent = palabraActual
+                .split('')
+                .map(letra => letrasAdivinadas.includes(letra) ? letra : '_')
+                .join(' ');
+        }
+
+        function actualizarIntentos() {
+            elementoIntentos.textContent = `Intentos restantes: ${intentosRestantes}`;
+        }
+
+        function actualizarMensaje(mensaje) {
+            elementoMensaje.textContent = mensaje;
+        }
+
+        function actualizarAhorcado() {
+            const partes = ['cabeza', 'cuerpo', 'brazoIzq', 'brazoDer', 'piernaIzq', 'piernaDer'];
+            partes.forEach((parte, index) => {
+                document.getElementById(parte).style.display = index < 6 - intentosRestantes ? 'inline' : 'none';
+            });
+        }
+
+        function crearTeclado() {
+            elementoTeclado.innerHTML = '';
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(letra => {
+                const boton = document.createElement('button');
+                boton.textContent = letra;
+                boton.className = 'tecla';
+                boton.addEventListener('click', () => adivinarLetra(letra));
+                elementoTeclado.appendChild(boton);
+            });
+        }
+
+        function adivinarLetra(letra) {
+            if (juegoTerminado || letrasAdivinadas.includes(letra)) return;
+
+            letrasAdivinadas.push(letra);
+            
+            if (!palabraActual.includes(letra)) {
+                intentosRestantes--;
+                actualizarIntentos();
+                actualizarAhorcado();
+                if (intentosRestantes === 0) {
+                    finalizarJuego(false);
+                }
+            } else {
+                actualizarPalabra();
+                if (!elementoPalabra.textContent.includes('_')) {
+                    finalizarJuego(true);
+                }
+            }
+
+            document.querySelector(`button:contains('${letra}')`).disabled = true;
+        }
+
+        function finalizarJuego(esVictoria) {
+            juegoTerminado = true;
+            if (esVictoria) {
+                actualizarMensaje('¡Felicidades! ¡Has ganado!');
+            } else {
+                actualizarMensaje(`¡Perdiste! La palabra era ${palabraActual}`);
+            }
+        }
+
+        botonNuevoJuego.addEventListener('click', iniciarJuego);
+
+        // Iniciar el juego al cargar la página
+        iniciarJuego();
+
+        // Polyfill para el método :contains en los selectores
+        if (!('contains' in String.prototype)) {
+            String.prototype.contains = function(str, startIndex) {
+                return -1 !== String.prototype.indexOf.call(this, str, startIndex);
+            };
+        }
+    </script>
+</body>
+</html>
